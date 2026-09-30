@@ -19,6 +19,8 @@
   }
 }
 
+:root { color-scheme: light dark; }
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -44,7 +46,7 @@ body {
   }
   .item {
     transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
-    max-height: 120px;
+    max-height: 200px;
   }
   .item.out {
     opacity: 0;

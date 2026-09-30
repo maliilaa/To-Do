@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, Trash2 } from "lucide-react";
-import { PRIORITIES } from "../constants";
+import { Check, Trash2, CalendarDays } from "lucide-react";
+import { PRIORITIES, CATEGORIES, DUE_STYLES } from "../constants";
+import { dueState, fmtDate } from "../utils";
 
-export default function TodoItem({ todo, onToggle, onDelete, onEdit, onCycle }) {
+export default function TodoItem({ todo, today, onToggle, onDelete, onEdit, onCycle, onDue }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(todo.text);
   const ref = useRef(null);
@@ -22,15 +23,25 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, onCycle }) 
   };
 
   const p = PRIORITIES[todo.priority];
+  const c = CATEGORIES[todo.category];
+  const ds = dueState(todo, today);
+  const dueLabel =
+    ds === "none"
+      ? "ไม่มีกำหนด"
+      : ds === "overdue"
+      ? "เลยกำหนด · " + fmtDate(todo.due)
+      : ds === "today"
+      ? "วันนี้"
+      : fmtDate(todo.due);
 
   return (
     <li className={"item in " + (todo.removing ? "out" : "")}>
-      <div className="flex items-center gap-3 px-4 py-3 border-b line">
+      <div className="flex items-start gap-3 px-4 py-3 border-b line">
         <button
           onClick={() => onToggle(todo.id)}
           aria-label="ทำเสร็จแล้ว"
           className={
-            "w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition " +
+            "w-5 h-5 mt-0.5 shrink-0 rounded-md border-2 flex items-center justify-center transition " +
             (todo.done
               ? "bg-indigo-500 border-indigo-500 text-white"
               : "border-gray-400 hover:border-indigo-500")
@@ -70,15 +81,39 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, onCycle }) 
               {todo.text}
             </span>
           )}
-        </div>
 
-        <button
-          onClick={() => onCycle(todo.id)}
-          title="เปลี่ยนความสำคัญ"
-          className={"text-xs font-medium px-2.5 py-1 rounded-full shrink-0 " + p.cls}
-        >
-          {p.label}
-        </button>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            <button
+              onClick={() => onCycle(todo.id)}
+              title="เปลี่ยนความสำคัญ"
+              className={"text-xs font-medium px-2.5 py-1 rounded-full " + p.cls}
+            >
+              {p.label}
+            </button>
+            <span className={"text-xs font-medium px-2.5 py-1 rounded-full " + c.cls}>
+              {c.label}
+            </span>
+            <label
+              title="เปลี่ยนวันครบกำหนด"
+              className={
+                "relative inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer " +
+                DUE_STYLES[ds]
+              }
+            >
+              <CalendarDays size={12} />
+              {dueLabel}
+              <input
+                type="date"
+                value={todo.due}
+                onChange={(e) => onDue(todo.id, e.target.value)}
+                onClick={(e) => {
+                  try { e.currentTarget.showPicker(); } catch { /* ignore */ }
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </label>
+          </div>
+        </div>
 
         <button
           onClick={() => onDelete(todo.id)}
